@@ -5,7 +5,7 @@
 
 name: Linting & Static Analysis 🤓
 
-on: pull_request
+on: push
 
 jobs:
   test:
