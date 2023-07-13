@@ -1,5 +1,3 @@
 # project_template
 
-das ist ein test.
-
-Und ich knalle hier ein Update rein.
+Template Repository mit GitHub Actions und codemagic.yaml Konfiguration.
