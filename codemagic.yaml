@@ -1,6 +1,13 @@
 definitions:
+  ###### TODO: PROJECT SPECIFIC SETUP ######
   bundle_identifier: &bundle_identifier
     bundle_identifier: io.codemagic.flutteryaml # TODO: put your bundle identifier here
+  ios_vars: &ios_vars
+    APP_ID: 1111111111 # <--TODO: Put your APP ID here
+
+
+
+  ##### ENVIRONMENT SETUP #####
   instance_mac_mini_m1: &instance_mac_mini_m1
     instance_type: mac_mini_m1
     max_build_duration: 60
@@ -14,6 +21,11 @@ definitions:
         - $HOME/.gradle/caches
         - $FLUTTER_ROOT/.pub-cache
         - $HOME/Library/Caches/CocoaPods
+
+
+
+
+  ##### SCRIPTS SETUP #####
   add_certs_to_keychain: &add_certs_to_keychain
     name: Add certs to keychain
     script: |
@@ -72,8 +84,6 @@ definitions:
     ios_signing:
       distribution_type: app_store
       bundle_identifier: *bundle_identifier
-  ios_vars: &ios_vars
-    APP_ID: 1111111111 # <--TODO: Put your APP ID here
   ios_artifacts: &ios_artifacts
     - build/ios/ipa/*.ipa
     - /tmp/xcodebuild_logs/*.log
