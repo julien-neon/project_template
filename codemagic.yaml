@@ -196,9 +196,9 @@ workflows:
     name: Pull Request Pipeline
     <<: *instance_mac_mini_m1
     environment:
+      ios_signing:
+        bundle_identifier: com.example.projectTemplate
       <<: *env_versions
-      # ios_signing:
-      #   bundle_identifier: com.example.projectTemplate
     <<: *dependency_caches
     triggering:
       # Trigger the workflow on pull requests targeting any branch
