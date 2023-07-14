@@ -26,15 +26,15 @@ definitions:
 
 
   ##### SCRIPTS SETUP #####
-#   add_certs_to_keychain: &add_certs_to_keychain
-#     name: Add certs to keychain
-#     script: |
-#         keychain add-certificates
+  add_certs_to_keychain: &add_certs_to_keychain
+    name: Add certificates to keychain
+    script: |
+        keychain initialize && keychain add-certificates
   flutter_android_setup: &flutter_android_setup
     name: Set up local.properties
     script: |
         echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
-  flutter_ios_signing_setup: &flutter_ios_signing_setup
+  flutter_ios_provisioning_setup: &flutter_ios_provisioning_setup
     name: Set up code signing settings on Xcode project
     script: |
         xcode-project use-profiles
@@ -59,13 +59,13 @@ definitions:
     script: |
         flutter test
     ignore_failure: false
-  build_android_no_signing: &build_android_no_signing
+  build_android_no_google: &build_android_no_google
     name: Build Android (AAB)
     script: |    
         flutter build appbundle --release \
         --build-name=1.0.$PROJECT_BUILD_NUMBER \
         --build-number=$PROJECT_BUILD_NUMBER
-  build_ios_no_signing: &build_ios_no_signing
+  build_ios_no_app_store_connect: &build_ios_no_app_store_connect
     name: Build iOS
     script: |
         flutter build ipa --release \
@@ -184,7 +184,7 @@ workflows:
       cancel_previous_builds: true
     scripts: 
       - *flutter_android_setup
-      - *flutter_ios_signing_setup
+      - *flutter_ios_provisioning_setup
       - *pub_get
       - *dart_format
       - *install_pods
@@ -197,7 +197,7 @@ workflows:
     <<: *instance_mac_mini_m1
     environment:
       ios_signing:
-        distribution_type: development
+        distribution_type: app_store
         bundle_identifier: com.example.projectTemplate
       <<: *env_versions
     <<: *dependency_caches
@@ -211,13 +211,15 @@ workflows:
       #   - source: false
       cancel_previous_builds: true
     scripts:
+      - *add_certs_to_keychain
+      - *flutter_ios_provisioning_setup # TODO: automatic code signing, aus dem app store connect iwie ziezhen
       - *pub_get
       - *dart_format
       - *install_pods
       - *flutter_analyze
       - *flutter_test
-      - *build_android_no_signing
-      - *build_ios_no_signing
+      - *build_android_no_google
+      - *build_ios_no_app_store_connect
       - *build_web # TODO: config, when to build what? we do not always want all three
     artifacts:
       - build/**/outputs/**/*.aab
