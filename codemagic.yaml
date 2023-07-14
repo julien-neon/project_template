@@ -106,22 +106,21 @@ definitions:
 #   android_vars: &android_vars
 #     PACKAGE_NAME: *bundle_identifier # 
 #     GOOGLE_PLAY_TRACK: "alpha"
-  android_artifacts: &android_artifacts
-    - build/**/outputs/**/*.aab
-    - build/**/outputs/**/*.apk
-    - build/**/outputs/**/mapping.txt
+
+  default_artifacts: &default_artifacts
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/mapping.txt
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - build/web.zip # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+    # - flutter_drive.log #TODO: needed? 
     # - flutter_drive.log #TODO: needed?
 #   ios_signing: &ios_signing
 #     ios_signing:
 #       distribution_type: app_store
 #       bundle_identifier: *bundle_identifier
-  ios_artifacts: &ios_artifacts
-    - build/ios/ipa/*.ipa
-    - /tmp/xcodebuild_logs/*.log
-    # - flutter_drive.log #TODO: needed? auf jeden fall nicht zweimal
-  web_artifacts: &web_artifacts
-    - build/web.zip
-    # - flutter_drive.log #TODO: needed? auf jeden fall nicht dreimal
 #   test_flight_setup: &test_flight_setup
 #     app_store_connect:
 #       auth: integration
@@ -229,16 +228,7 @@ workflows:
       - *build_android_no_google
       - *build_ios_no_app_store_connect
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
-    artifacts:
-      - *android_artifacts
-      - *ios_artifacts
-      - *web_artifacts
-      # - build/**/outputs/**/*.aab
-      # - build/**/outputs/**/*.apk
-      # - build/**/outputs/**/mapping.txt
-      # - build/ios/ipa/*.ipa
-      # - /tmp/xcodebuild_logs/*.log
-      # - build/web.zip # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+    <<: *default_artifacts
     publishing:
       <<: *email_notification_setup
 #   pr:
