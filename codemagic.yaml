@@ -197,6 +197,7 @@ workflows:
     <<: *instance_mac_mini_m1
     environment:
       ios_signing:
+        distribution_type: development
         bundle_identifier: com.example.projectTemplate
       <<: *env_versions
     <<: *dependency_caches
