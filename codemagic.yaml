@@ -175,7 +175,7 @@ workflows:
     environment:
       <<: *env_versions
       ios_signing:
-        bundle_identifier: *bundle_identifier
+        <<: *bundle_identifier
     <<: *dependency_caches
     triggering:
       # Trigger the workflow on pull requests targeting any branch
