@@ -53,10 +53,6 @@ definitions:
     name: Add certificates to keychain
     script: |
         keychain initialize && keychain add-certificates
-  flutter_android_setup: &flutter_android_setup
-    name: Set up local.properties
-    script: |
-        echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
   flutter_ios_provisioning_setup: &flutter_ios_provisioning_setup
     name: Set up code signing settings on Xcode project
     script: |
@@ -102,7 +98,7 @@ definitions:
     name: Build iOS and automatic versioning
     script: |
         flutter build ipa --release \
-          --build-name=1.0.0 \
+          --build-name=1.0.1 \
           --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
           --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
@@ -183,10 +179,6 @@ workflows:
       - *flutter_analyze
       - *flutter_test
       - *build_android_no_google
-      - name: iOS Pre-Build Script
-        script:  | 
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number '$APP_ID')
-          cd ./ios && agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
       - *build_ios
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
@@ -236,6 +228,11 @@ workflows:
 
 ################# RESEARCH #####################
 
+
+  # flutter_android_setup: &flutter_android_setup
+  #   name: Set up local.properties
+  #   script: |
+  #       echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
 
 
 #   ios_signing: &ios_signing
