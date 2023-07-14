@@ -1,7 +1,7 @@
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
   bundle_identifier: &bundle_identifier
-    bundle_identifier: "com.example.projectTemplate" # TODO: put your bundle identifier here
+    com.example.projectTemplate # TODO: put your bundle identifier here
   ios_vars: &ios_vars
     APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
@@ -175,7 +175,7 @@ workflows:
     environment:
       <<: *env_versions
       ios_signing:
-        <<: *bundle_identifier
+        bundle_identifier: *bundle_identifier
     <<: *dependency_caches
     triggering:
       # Trigger the workflow on pull requests targeting any branch
