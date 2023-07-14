@@ -34,7 +34,7 @@ definitions:
     name: Set up local.properties
     script: |
         echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
-  flutter_ios_setup: &flutter_ios_setup
+  flutter_ios_signing_setup: &flutter_ios_signing_setup
     name: Set up code signing settings on Xcode project
     script: |
         xcode-project use-profiles
@@ -149,6 +149,25 @@ definitions:
 #         failure: false # To not receive a notification when a build fails
 
 workflows:
+  main: 
+    # tests, builds and submits to App Store Review
+    name: Main Pipeline
+    <<: *instance_mac_mini_m1
+    environment:
+      <<: *env_versions
+    triggering: 
+      # Trigger the workflow on pushes to the main branch
+      events:  
+        - push
+      branch_patterns:
+        - pattern: 'main'
+    scripts: 
+      - *flutter_android_setup
+      - *flutter_ios_signing_setup
+      - *pub_get
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
 #   pr:
 #     # tests and builds pull requests
 #     name: Pull Request Pipeline
@@ -205,25 +224,7 @@ workflows:
 #       branch_patterns:
 #         - pattern: 'dev'
 
-  main: 
-    # tests, builds and submits to App Store Review
-    name: Main Pipeline
-    <<: *instance_mac_mini_m1
-    environment:
-      <<: *env_versions
-    triggering: 
-      # Trigger the workflow on pushes to the main branch
-      events:  
-        - push
-      branch_patterns:
-        - pattern: 'main'
-    scripts: 
-      - *flutter_android_setup
-      - *flutter_ios_setup
-      - *pub_get
-      - *install_pods
-      - *flutter_analyze
-      - *flutter_test
+
 
 
 
