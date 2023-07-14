@@ -197,8 +197,10 @@ workflows:
     <<: *instance_mac_mini_m1
     environment:
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.example.projectTemplate
+        provisioning_profiles:
+          - playground
+        certificates:
+          - playground
       <<: *env_versions
     <<: *dependency_caches
     triggering:
