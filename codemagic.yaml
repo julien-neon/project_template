@@ -168,40 +168,6 @@ definitions:
 #         failure: false # To not receive a notification when a build fails
 
 workflows:
-  # pr:
-  #   # tests and builds pull requests
-  #   name: Pull Request Pipeline
-  #   <<: *instance_mac_mini_m1
-  #   environment:
-  #     <<: *env_versions
-  #     ios_signing:
-  #       bundle_identifier: *bundle_identifier
-  #   <<: *dependency_caches
-  #   triggering:
-  #     # Trigger the workflow on pull requests targeting any branch
-  #     events:  
-  #       - pull_request
-  #     # Trigger the workflow on pull requests targeting the dev branch
-  #     # branch_patterns:
-  #     #   - pattern: 'dev*'
-  #     #   - source: false
-  #   scripts:
-  #     - *pub_get
-  #     - *dart_format
-  #     - *install_pods
-  #     - *flutter_analyze
-  #     - *flutter_test
-  #     - *build_android_no_signing
-  #     - *build_ios_no_signing
-  #     - *build_web # TODO: config, when to build what? we do not always want all three
-  #   artifacts:
-  #     - build/**/outputs/**/*.aab
-  #     - build/**/outputs/**/mapping.txt
-  #     - build/ios/ipa/*.ipa
-  #     - /tmp/xcodebuild_logs/*.log
-  #     - build/web.zip
-  #   publishing:
-  #     <<: *email_notification_setup
   main: 
     # tests, builds and submits to App Store Review
     name: Main Pipeline
@@ -224,6 +190,41 @@ workflows:
       - *install_pods
       - *flutter_analyze
       - *flutter_test
+  
+  pr:
+    # tests and builds pull requests
+    name: Pull Request Pipeline
+    <<: *instance_mac_mini_m1
+    environment:
+      <<: *env_versions
+      ios_signing:
+        bundle_identifier: com.example.projectTemplate
+    <<: *dependency_caches
+    triggering:
+      # Trigger the workflow on pull requests targeting any branch
+      events:  
+        - pull_request
+      # Trigger the workflow on pull requests targeting the dev branch
+      # branch_patterns:
+      #   - pattern: 'dev*'
+      #   - source: false
+    scripts:
+      - *pub_get
+      - *dart_format
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
+      - *build_android_no_signing
+      - *build_ios_no_signing
+      - *build_web # TODO: config, when to build what? we do not always want all three
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - build/web.zip
+    publishing:
+      <<: *email_notification_setup
 #   pr:
 #     # tests and builds pull requests
 #     name: Pull Request Pipeline
