@@ -209,6 +209,7 @@ workflows:
       # branch_patterns:
       #   - pattern: 'dev*'
       #   - source: false
+      cancel_previous_builds: true
     scripts:
       - *pub_get
       - *dart_format
