@@ -88,7 +88,7 @@ definitions:
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
-    name: Flutter build web
+    name: Build web
     script: |
         flutter build web --release
         cd build/web
