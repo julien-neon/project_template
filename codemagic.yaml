@@ -1,15 +1,27 @@
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
-  bundle_identifier: &bundle_identifier
-    com.example.projectTemplate # TODO: put your bundle identifier here
-  ios_vars: &ios_vars
-    APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
-  # TODO: IF YOU WANT TO BUILD WEB AS WELL, ADD THE SCRIPT TO THE WORKFLOW AND THE ARTIFACTS TO THE ARTIFACTS SECTION
+  ios_signing_setup: &ios_signing_setup
+    ios_signing:
+        provisioning_profiles:
+          - playground # <-- TODO: put your provisioning profile name here
+        certificates:
+          - playground # <-- TODO: put your certificate name here
+
+  email_notification_setup: &email_notification_setup
+    email:
+      recipients:
+        - developer@neon.dev # <-- TODO: add all the recipients here
+      notify:
+        success: true # To receive a notification when a build succeeds
+        failure: false # To not receive a notification when a build fails
+
+  # TODO: IF YOU DO NOT WANT TO BUILD WEB REMOVE THE SCRIPT FROM ALL THE WORKFLOWS BELOW
+  # AND THE ARTIFACT FROM *default_artifacts!
 
 
 
-  ##### ENVIRONMENT SETUP #####
+  ##### ENVIRONMENT SETUP ##### (Only change if you know what you are doing)
   instance_mac_mini_m1: &instance_mac_mini_m1
     instance_type: mac_mini_m1
     max_build_duration: 60
@@ -24,10 +36,8 @@ definitions:
         - $FLUTTER_ROOT/.pub-cache
         - $HOME/Library/Caches/CocoaPods
 
-# TODO: conditional scripts: e.g. bool whether to build web, bool whether to run build_runner etc.
 
-
-  ##### SCRIPTS SETUP #####
+  ##### SCRIPTS SETUP ##### (Only change if you know what you are doing)
   add_certs_to_keychain: &add_certs_to_keychain
     name: Add certificates to keychain
     script: |
@@ -77,35 +87,12 @@ definitions:
           --build-name=1.0.$PROJECT_BUILD_NUMBER \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
-  build_android: &build_android
-    name: Flutter build AAB and APK
-    script: |
-        BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
-        flutter build appbundle --release \
-          --build-name=1.0.$BUILD_NUMBER \
-          --build-number=$BUILD_NUMBER
-        flutter build apk --release \
-          --build-name=1.0.$BUILD_NUMBER \
-          --build-number=$BUILD_NUMBER
-  # build_ios: &build_ios
-  #   name: Flutter build ipa and automatic versioning
-  #   script: |
-  #       flutter build ipa --release \
-  #         --build-name=1.0.0 \
-  #         --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
-  #         --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
     name: Flutter build web
     script: |
         flutter build web --release
         cd build/web
         7z a -r ../web.zip ./*
-#   android_signing: &android_signing
-#     android_signing:
-#         - keystore_reference
-#   android_vars: &android_vars
-#     PACKAGE_NAME: *bundle_identifier # 
-#     GOOGLE_PLAY_TRACK: "alpha"
 
   default_artifacts: &default_artifacts
     artifacts:
@@ -116,7 +103,90 @@ definitions:
       - /tmp/xcodebuild_logs/*.log
       - build/web.zip # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     # - flutter_drive.log #TODO: needed? 
-    # - flutter_drive.log #TODO: needed?
+
+workflows:
+  pr:
+    # tests and builds pull requests
+    name: Pull Request Pipeline
+    <<: *instance_mac_mini_m1
+    environment:
+      <<: *ios_signing_setup
+      <<: *env_versions
+    <<: *dependency_caches
+    triggering:
+      # Trigger the workflow on pull requests targeting any branch
+      events:  
+        - pull_request
+      cancel_previous_builds: true
+    scripts:
+      - *add_certs_to_keychain
+      - *flutter_ios_provisioning_setup
+      - *pub_get
+      - *dart_format
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
+      - *build_android_no_google
+      - *build_ios_no_app_store_connect
+      - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+    <<: *default_artifacts
+    publishing:
+      <<: *email_notification_setup
+
+  ### STILL WIP ###    
+  # main: 
+  #   # tests, builds and submits to App Store Review
+  #   name: Main Pipeline
+  #   <<: *instance_mac_mini_m1
+  #   environment:
+  #     <<: *env_versions
+  #   <<: *dependency_caches
+  #   triggering: 
+  #     # Trigger the workflow on pushes to the main branch
+  #     events:  
+  #       - push
+  #     branch_patterns:
+  #       - pattern: 'main'
+  #     cancel_previous_builds: true
+  #   scripts: 
+  #     - *flutter_android_setup
+  #     - *flutter_ios_provisioning_setup
+  #     - *pub_get
+  #     - *dart_format
+  #     - *install_pods
+  #     - *flutter_analyze
+  #     - *flutter_test
+
+
+#   dev:
+#     # tests, builds and submits to TestFlight
+#     name: Dev Pipeline
+#     <<: *instance_mac_mini_m1
+#     environment:
+#       groups:
+#         - keystore_credentials
+#         - app_store_credentials
+#     <<: *env_versions
+#     <<: *dependency_caches
+#     triggering:
+#       # Trigger the workflow on pushes to the dev branch
+#       events:  
+#         - push
+#       branch_patterns:
+#         - pattern: 'dev'
+
+
+
+
+
+
+
+
+
+################# RESEARCH #####################
+
+
+
 #   ios_signing: &ios_signing
 #     ios_signing:
 #       distribution_type: app_store
@@ -153,149 +223,42 @@ definitions:
 #       track: $GOOGLE_PLAY_TRACK
 #       submit_as_draft: false
 
-
-#   ##### TODO: SETUP THE NOTIFICATIONS FOR THE WORKFLOWS #####
-
-  email_notification_setup: &email_notification_setup
-    email:
-      recipients:
-        - julien@neon.dev
-      notify:
-        success: true # To receive a notification when a build succeeds
-        failure: false # To not receive a notification when a build fails
-#   slack_notification_setup: &slack_notification_setup
-#     slack:
-#       # See the following link about how to connect your Slack account - https://docs.codemagic.io/publishing-yaml/distribution/#slack
-#       channel: "#builds"
-#       notify_on_build_start: true # To receive a notification when a build starts
-#       notify:
-#         success: true # To receive a notification when a build succeeds
-#         failure: false # To not receive a notification when a build fails
-
-workflows:
-  main: 
-    # tests, builds and submits to App Store Review
-    name: Main Pipeline
-    <<: *instance_mac_mini_m1
-    environment:
-      <<: *env_versions
-    <<: *dependency_caches
-    triggering: 
-      # Trigger the workflow on pushes to the main branch
-      events:  
-        - push
-      branch_patterns:
-        - pattern: 'main'
-      cancel_previous_builds: true
-    scripts: 
-      - *flutter_android_setup
-      - *flutter_ios_provisioning_setup
-      - *pub_get
-      - *dart_format
-      - *install_pods
-      - *flutter_analyze
-      - *flutter_test
-  
-  pr:
-    # tests and builds pull requests
-    name: Pull Request Pipeline
-    <<: *instance_mac_mini_m1
-    environment:
-      ios_signing:
-        provisioning_profiles:
-          - playground
-        certificates:
-          - playground
-      <<: *env_versions
-    <<: *dependency_caches
-    triggering:
-      # Trigger the workflow on pull requests targeting any branch
-      events:  
-        - pull_request
-      # Trigger the workflow on pull requests targeting the dev branch
-      # branch_patterns:
-      #   - pattern: 'dev*'
-      #   - source: false
-      cancel_previous_builds: true
-    scripts:
-      - *add_certs_to_keychain
-      - *flutter_ios_provisioning_setup # TODO: automatic code signing, aus dem app store connect iwie ziezhen
-      - *pub_get
-      - *dart_format
-      - *install_pods
-      - *flutter_analyze
-      - *flutter_test
-      - *build_android_no_google
-      - *build_ios_no_app_store_connect
-      - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
-    <<: *default_artifacts
-    publishing:
-      <<: *email_notification_setup
-#   pr:
-#     # tests and builds pull requests
-#     name: Pull Request Pipeline
-#     <<: *instance_mac_mini_m1
-#     environment:
-#       groups:
-#         - keystore_credentials
-#         - app_store_credentials
-#         - google_play # <-- (Includes GCLOUD_SERVICE_ACCOUNT_CREDENTIALS) #TODO: wann muss der sein?
-#       <<: *android_signing
-#       <<: *ios_signing
-#       vars:
-#        <<: *android_vars
-#        <<: *ios_vars
-#     <<: *env_versions
-#     <<: *dependency_caches
-#     triggering:
-#       # Trigger the workflow on pull requests targeting any branch
-#       events:  
-#         - pull_request
-#       # Trigger the workflow on pull requests targeting the dev branch
-#       # branch_patterns:
-#       #   - pattern: 'dev*'
-#       #   - source: false
-#     scripts:
-#       <<: *flutter_setup
-#       <<: *build_android
-#       <<: *build_ios
-#       <<: *build_web
-#     artifacts:
-#       <<: *android_artifacts
-#       <<: *ios_artifacts
-#       <<: *web_artifacts
-#     publishing:
-#       <<: *test_flight_setup 
-#       <<: *email_notification_setup
-#       <<: *slack_notification_setup
+  # bundle_identifier: &bundle_identifier
+  #   com.example.projectTemplate # TODO: put your bundle identifier here
+  # ios_vars: &ios_vars
+  #   APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
 
-#   dev:
-#     # tests, builds and submits to TestFlight
-#     name: Dev Pipeline
-#     <<: *instance_mac_mini_m1
-#     environment:
-#       groups:
-#         - keystore_credentials
-#         - app_store_credentials
-#     <<: *env_versions
-#     <<: *dependency_caches
-#     triggering:
-#       # Trigger the workflow on pushes to the dev branch
-#       events:  
-#         - push
-#       branch_patterns:
-#         - pattern: 'dev'
+
+  # build_android: &build_android
+  #   name: Flutter build AAB and APK
+  #   script: |
+  #       BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
+  #       flutter build appbundle --release \
+  #         --build-name=1.0.$BUILD_NUMBER \
+  #         --build-number=$BUILD_NUMBER
+  #       flutter build apk --release \
+  #         --build-name=1.0.$BUILD_NUMBER \
+  #         --build-number=$BUILD_NUMBER
+  # build_ios: &build_ios
+  #   name: Flutter build ipa and automatic versioning
+  #   script: |
+  #       flutter build ipa --release \
+  #         --build-name=1.0.0 \
+  #         --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
+  #         --export-options-plist=/Users/builder/export_options.plist
+
+#   android_signing: &android_signing
+#     android_signing:
+#         - keystore_reference
+#   android_vars: &android_vars
+#     PACKAGE_NAME: *bundle_identifier # 
+#     GOOGLE_PLAY_TRACK: "alpha"
 
 
 
 
 
-
-
-
-
-################# RESEARCH #####################
 # workflows:
 #   android-workflow:
 #     name: Android Workflow
