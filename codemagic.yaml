@@ -195,9 +195,11 @@ workflows:
       - *build_ios_no_signing
       - *build_web # TODO: config, when to build what? we do not always want all three
     artifacts:
-      <<: *android_artifacts_just_aab
-      <<: *ios_artifacts
-      <<: *web_artifacts
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - build/web.zip
     publishing:
       <<: *email_notification_setup
   main: 
