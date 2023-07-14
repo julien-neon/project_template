@@ -207,8 +207,6 @@ workflows:
           - playground
         certificates:
           - playground
-      vars: 
-        - BUILD_WEB: *build_web
       <<: *env_versions
     <<: *dependency_caches
     triggering:
