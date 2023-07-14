@@ -164,7 +164,7 @@ workflows:
       events:  
         - push
       branch_patterns:
-        - pattern: '*'
+        - pattern: 'main'
       cancel_previous_builds: true
     scripts: 
       - *flutter_android_setup
