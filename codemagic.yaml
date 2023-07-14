@@ -195,9 +195,9 @@ workflows:
       - *build_ios_no_signing
       - *build_web # TODO: config, when to build what? we do not always want all three
     artifacts:
-      *android_artifacts_just_aab
-      *ios_artifacts
-      *web_artifacts
+      - *android_artifacts_just_aab
+      - *ios_artifacts
+      - *web_artifacts
     publishing:
       <<: *email_notification_setup
   main: 
