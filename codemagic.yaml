@@ -5,6 +5,8 @@ definitions:
   ios_vars: &ios_vars
     APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
+  build_web: false # whether to build web
+
 
 
   ##### ENVIRONMENT SETUP #####
@@ -64,8 +66,8 @@ definitions:
     script: |    
         flutter build appbundle --release \
         --build-name=1.0.$PROJECT_BUILD_NUMBER \
-        --build-number=$PROJECT_BUILD_NUMBER \
-        && flutter build apk --relase \
+        --build-number=$PROJECT_BUILD_NUMBER
+        flutter build apk --release \
         --build-name=1.0.$PROJECT_BUILD_NUMBER \
         --build-number=$PROJECT_BUILD_NUMBER
   build_ios_no_app_store_connect: &build_ios_no_app_store_connect
@@ -92,7 +94,7 @@ definitions:
   #         --build-name=1.0.0 \
   #         --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
   #         --export-options-plist=/Users/builder/export_options.plist
-  build_web: &build_web
+  build_web_release: &build_web_release
     name: Flutter build web
     script: |
         flutter build web --release
@@ -226,7 +228,8 @@ workflows:
       - *flutter_test
       - *build_android_no_google
       - *build_ios_no_app_store_connect
-      - *build_web # TODO: config, when to build what? we do not always want all three
+      - if build_web
+        - *build_web_release # TODO: config, when to build what? we do not always want all three
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/*.apk
