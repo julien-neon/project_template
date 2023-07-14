@@ -148,7 +148,7 @@ definitions:
 #         success: true # To receive a notification when a build succeeds
 #         failure: false # To not receive a notification when a build fails
 
-# workflows:
+workflows:
 #   pr:
 #     # tests and builds pull requests
 #     name: Pull Request Pipeline
