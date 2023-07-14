@@ -4,6 +4,9 @@ definitions:
   ios_vars: &ios_vars
     APP_ID: 6451317368 # <--TODO: Put your APP ID here
 
+  app_store_connect_api_key_name: &app_store_connect_api_key_name
+    app_store_connect: Codemagic Playground # <-- TODO: put your app store connect API key name here
+
   ios_signing_setup: &ios_signing_setup
     ios_signing:
         provisioning_profiles:
@@ -19,13 +22,18 @@ definitions:
         success: true # To receive a notification when a build succeeds
         failure: false # To not receive a notification when a build fails
 
+
+  testflight_tester_groups: &testflight_tester_groups
+    beta_groups: 
+      - testers # <-- TODO: specify groups here
+
   # TODO: IF YOU DO NOT WANT TO BUILD WEB REMOVE THE SCRIPT FROM ALL THE WORKFLOWS BELOW
   # AND THE ARTIFACT FROM *default_artifacts!
 
 
 
   ##### ENVIRONMENT SETUP ##### (Only change if you know what you are doing)
-  instance_mac_mini_m1: &instance_mac_mini_m1
+  building_instance: &building_instance
     instance_type: mac_mini_m1
     max_build_duration: 60
   env_versions: &env_versions
@@ -90,6 +98,13 @@ definitions:
           --build-name=1.0.$PROJECT_BUILD_NUMBER \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
+  build_ios: &build_ios
+    name: Build iOS and automatic versioning
+    script: |
+        flutter build ipa --release \
+          --build-name=1.0.0 \
+          --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
+          --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
     name: Build web
     script: |
@@ -111,7 +126,7 @@ workflows:
   pr:
     # tests and builds pull requests
     name: Pull Request Pipeline
-    <<: *instance_mac_mini_m1
+    <<: *building_instance
     environment:
       <<: *ios_signing_setup
       <<: *env_versions
@@ -140,8 +155,8 @@ workflows:
     # tests, builds and submits to TestFlight
     name: Dev Pipeline
     integrations:
-      app_store_connect: Codemagic Playground # <-- TODO: put your app store connect API key name here
-    <<: *instance_mac_mini_m1
+      <<: *app_store_connect_api_key_name
+    <<: *building_instance
     environment:
       <<: *ios_signing_setup
       <<: *env_versions
@@ -164,27 +179,15 @@ workflows:
       - *flutter_analyze
       - *flutter_test
       - *build_android_no_google
-      - name: Flutter build ipa and automatic versioning
-        script: |
-            flutter build ipa --release \
-              --build-name=1.0.0 \
-              --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
-              --export-options-plist=/Users/builder/export_options.plist
+      - *build_ios
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
     publishing:
       <<: *email_notification_setup
       app_store_connect:
         auth: integration
-        
-        # Configuration related to TestFlight (optional)
-        # Note: This action is performed during post-processing.
         submit_to_testflight: true
-        beta_groups: # Specify the names of beta tester groups that will get access to the build once it has passed beta review.
-          - testers # <-- TODO: specify groups here
-
-        # Configuration related to App Store (optional)
-        # Note: This action is performed during post-processing.
+        <<: *testflight_tester_groups
         submit_to_app_store: false
 
 
