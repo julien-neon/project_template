@@ -1,7 +1,7 @@
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
   bundle_identifier: &bundle_identifier
-    bundle_identifier: com.example.projectTemplate # TODO: put your bundle identifier here
+    com.example.projectTemplate # TODO: put your bundle identifier here
   ios_vars: &ios_vars
     APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
@@ -99,7 +99,7 @@ definitions:
 #     android_signing:
 #         - keystore_reference
 #   android_vars: &android_vars
-#     PACKAGE_NAME: *bundle_identifier # <-- TODO: war vor der Definition in "", also "io.codemagic.flutteryaml". macht das was kaputt?
+#     PACKAGE_NAME: *bundle_identifier # 
 #     GOOGLE_PLAY_TRACK: "alpha"
   android_artifacts_just_aab: &android_artifacts_just_aab
     - build/**/outputs/**/*.aab
@@ -168,14 +168,38 @@ definitions:
 #         failure: false # To not receive a notification when a build fails
 
 workflows:
+  main: 
+    # tests, builds and submits to App Store Review
+    name: Main Pipeline
+    <<: *instance_mac_mini_m1
+    environment:
+      <<: *env_versions
+    <<: *dependency_caches
+    triggering: 
+      # Trigger the workflow on pushes to the main branch
+      events:  
+        - push
+      branch_patterns:
+        - pattern: 'main'
+      cancel_previous_builds: true
+    scripts: 
+      - *flutter_android_setup
+      - *flutter_ios_signing_setup
+      - *pub_get
+      - *dart_format
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
+  
   pr:
     # tests and builds pull requests
     name: Pull Request Pipeline
     <<: *instance_mac_mini_m1
     environment:
-      <<: *env_versions
       ios_signing:
-        bundle_identifier: *bundle_identifier
+        distribution_type: development
+        bundle_identifier: com.example.projectTemplate
+      <<: *env_versions
     <<: *dependency_caches
     triggering:
       # Trigger the workflow on pull requests targeting any branch
@@ -202,28 +226,6 @@ workflows:
       - build/web.zip
     publishing:
       <<: *email_notification_setup
-  main: 
-    # tests, builds and submits to App Store Review
-    name: Main Pipeline
-    <<: *instance_mac_mini_m1
-    environment:
-      <<: *env_versions
-    <<: *dependency_caches
-    triggering: 
-      # Trigger the workflow on pushes to the main branch
-      events:  
-        - push
-      branch_patterns:
-        - pattern: 'main'
-      cancel_previous_builds: true
-    scripts: 
-      - *flutter_android_setup
-      - *flutter_ios_signing_setup
-      - *pub_get
-      - *dart_format
-      - *install_pods
-      - *flutter_analyze
-      - *flutter_test
 #   pr:
 #     # tests and builds pull requests
 #     name: Pull Request Pipeline
