@@ -157,7 +157,7 @@ definitions:
         - julien@neon.dev
       notify:
         success: true # To receive a notification when a build succeeds
-        failure: true # To not receive a notification when a build fails
+        failure: false # To not receive a notification when a build fails
 #   slack_notification_setup: &slack_notification_setup
 #     slack:
 #       # See the following link about how to connect your Slack account - https://docs.codemagic.io/publishing-yaml/distribution/#slack
