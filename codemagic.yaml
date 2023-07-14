@@ -42,6 +42,10 @@ definitions:
     name: Get Flutter packages
     script: |
         flutter packages pub get
+  dart_format: &dart_format
+    name: Verify formatting
+    script: |
+        dart format --output=none --set-exit-if-changed .
   install_pods: &install_pods
     name: Install pods
     script: |
@@ -165,6 +169,7 @@ workflows:
       - *flutter_android_setup
       - *flutter_ios_signing_setup
       - *pub_get
+      - *dart_format
       - *install_pods
       - *flutter_analyze
       - *flutter_test
