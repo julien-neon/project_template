@@ -122,6 +122,10 @@ definitions:
       - build/web.zip # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     # - flutter_drive.log #TODO: needed? 
 
+
+
+##### HERE BEGIN THE WORKFLOWS #####
+
 workflows:
   pr:
     # tests and builds pull requests
@@ -179,6 +183,10 @@ workflows:
       - *flutter_analyze
       - *flutter_test
       - *build_android_no_google
+      - name: iOS Pre-Build Script
+        script:  | 
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number '$APP_ID')
+          cd ./ios && agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
       - *build_ios
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
