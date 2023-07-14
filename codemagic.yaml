@@ -1,7 +1,7 @@
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
   bundle_identifier: &bundle_identifier
-    bundle_identifier: com.example.projectTemplate # TODO: put your bundle identifier here
+    bundle_identifier: "com.example.projectTemplate" # TODO: put your bundle identifier here
   ios_vars: &ios_vars
     APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
@@ -99,7 +99,7 @@ definitions:
 #     android_signing:
 #         - keystore_reference
 #   android_vars: &android_vars
-#     PACKAGE_NAME: *bundle_identifier # <-- TODO: war vor der Definition in "", also "io.codemagic.flutteryaml". macht das was kaputt?
+#     PACKAGE_NAME: *bundle_identifier # 
 #     GOOGLE_PLAY_TRACK: "alpha"
   android_artifacts_just_aab: &android_artifacts_just_aab
     - build/**/outputs/**/*.aab
