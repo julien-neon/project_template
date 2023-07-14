@@ -31,30 +31,30 @@ definitions:
 #     script: |
 #         keychain add-certificates
   flutter_android_setup: &flutter_android_setup
-    name: Set up local.properties
-    script: |
-        echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+    - name: Set up local.properties
+      script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
   flutter_ios_setup: &flutter_ios_setup
-    name: Set up code signing settings on Xcode project
-    script: |
-        xcode-project use-profiles
+    - name: Set up code signing settings on Xcode project
+      script: |
+          xcode-project use-profiles
   pub_get: &pub_get
-    name: Get Flutter packages
-    script: |
-        flutter packages pub get
+    - name: Get Flutter packages
+      script: |
+          flutter packages pub get
   install_pods: &install_pods
-    name: Install pods
-    script: |
-        find . -name "Podfile" -execdir pod install \;
+    - name: Install pods
+      script: |
+          find . -name "Podfile" -execdir pod install \;
   flutter_analyze: &flutter_analyze
-    name: Flutter analyze
-    script: |
-        flutter analyze
+    - name: Flutter analyze
+      script: |
+          flutter analyze
   flutter_test: &flutter_test
-    name: Flutter unit tests
-    script: |
-        flutter test
-    ignore_failure: false
+    - name: Flutter unit tests
+      script: |
+          flutter test
+      ignore_failure: false
 #   build_android: &build_android
 #     name: Flutter build AAB #TODO: also build apk!!!
 #     script: |
