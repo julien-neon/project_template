@@ -5,7 +5,7 @@ definitions:
   ios_vars: &ios_vars
     APP_ID: 1111111111 # <--TODO: Put your APP ID here
 
-  build_web: false # whether to build web
+  # TODO: IF YOU WANT TO BUILD WEB AS WELL, ADD THE SCRIPT TO THE WORKFLOW AND THE ARTIFACTS TO THE ARTIFACTS SECTION
 
 
 
@@ -207,6 +207,8 @@ workflows:
           - playground
         certificates:
           - playground
+      vars: 
+        - BUILD_WEB: *build_web
       <<: *env_versions
     <<: *dependency_caches
     triggering:
@@ -228,15 +230,17 @@ workflows:
       - *flutter_test
       - *build_android_no_google
       - *build_ios_no_app_store_connect
-      - if build_web
-        - *build_web_release # TODO: config, when to build what? we do not always want all three
+      - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     artifacts:
-      - build/**/outputs/**/*.aab
-      - build/**/outputs/**/*.apk
-      - build/**/outputs/**/mapping.txt
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - build/web.zip
+      - *android_artifacts
+      - *ios_artifacts
+      - *web_artifacts
+      # - build/**/outputs/**/*.aab
+      # - build/**/outputs/**/*.apk
+      # - build/**/outputs/**/mapping.txt
+      # - build/ios/ipa/*.ipa
+      # - /tmp/xcodebuild_logs/*.log
+      # - build/web.zip # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     publishing:
       <<: *email_notification_setup
 #   pr:
