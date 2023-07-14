@@ -139,6 +139,8 @@ workflows:
   dev:
     # tests, builds and submits to TestFlight
     name: Dev Pipeline
+    integrations:
+      app_store_connect: Codemagic Playground # <-- TODO: put your app store connect API key name here
     <<: *instance_mac_mini_m1
     environment:
       <<: *ios_signing_setup
