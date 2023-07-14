@@ -159,7 +159,7 @@ workflows:
     <<: *instance_mac_mini_m1
     environment:
       <<: *env_versions
-    *dependency_caches
+    <<: *dependency_caches
     triggering: 
       # Trigger the workflow on pushes to the main branch
       events:  
