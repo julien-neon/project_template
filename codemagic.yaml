@@ -1,6 +1,9 @@
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
 
+  ios_vars: &ios_vars
+    APP_ID: 6451317368 # <--TODO: Put your APP ID here
+
   ios_signing_setup: &ios_signing_setup
     ios_signing:
         provisioning_profiles:
@@ -133,6 +136,59 @@ workflows:
     publishing:
       <<: *email_notification_setup
 
+  dev:
+    # tests, builds and submits to TestFlight
+    name: Dev Pipeline
+    <<: *instance_mac_mini_m1
+    environment:
+      <<: *ios_signing_setup
+      <<: *env_versions
+      vars:
+        <<: *ios_vars
+    <<: *dependency_caches
+    triggering:
+      # Trigger the workflow on pushes to the dev branch
+      events:  
+        - push
+      branch_patterns:
+        - pattern: 'dev'
+      cancel_previous_builds: true
+    scripts:
+      - *add_certs_to_keychain
+      - *flutter_ios_provisioning_setup
+      - *pub_get
+      - *dart_format
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
+      - *build_android_no_google
+      - name: Flutter build ipa and automatic versioning
+        script: |
+            flutter build ipa --release \
+              --build-name=1.0.0 \
+              --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
+              --export-options-plist=/Users/builder/export_options.plist
+      - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+    <<: *default_artifacts
+    publishing:
+      <<: *email_notification_setup
+      app_store_connect:
+        auth: integration
+        
+        # Configuration related to TestFlight (optional)
+        # Note: This action is performed during post-processing.
+        submit_to_testflight: true
+        beta_groups: # Specify the names of beta tester groups that will get access to the build once it has passed beta review.
+          - testers # <-- TODO: specify groups here
+
+        # Configuration related to App Store (optional)
+        # Note: This action is performed during post-processing.
+        submit_to_app_store: false
+
+
+
+
+
   ### STILL WIP ###    
   # main: 
   #   # tests, builds and submits to App Store Review
@@ -156,24 +212,6 @@ workflows:
   #     - *install_pods
   #     - *flutter_analyze
   #     - *flutter_test
-
-
-#   dev:
-#     # tests, builds and submits to TestFlight
-#     name: Dev Pipeline
-#     <<: *instance_mac_mini_m1
-#     environment:
-#       groups:
-#         - keystore_credentials
-#         - app_store_credentials
-#     <<: *env_versions
-#     <<: *dependency_caches
-#     triggering:
-#       # Trigger the workflow on pushes to the dev branch
-#       events:  
-#         - push
-#       branch_patterns:
-#         - pattern: 'dev'
 
 
 
@@ -225,8 +263,7 @@ workflows:
 
   # bundle_identifier: &bundle_identifier
   #   com.example.projectTemplate # TODO: put your bundle identifier here
-  # ios_vars: &ios_vars
-  #   APP_ID: 1111111111 # <--TODO: Put your APP ID here
+
 
 
 
@@ -309,6 +346,8 @@ workflows:
 #         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
 #         track: $GOOGLE_PLAY_TRACK
 #         submit_as_draft: true
+
+
 #   ios-workflow:
 #     name: iOS Workflow
 #     instance_type: mac_mini_m1
@@ -380,31 +419,3 @@ workflows:
 #         # Configuration related to App Store (optional)
 #         # Note: This action is performed during post-processing.
 #         submit_to_app_store: false
-
-#   web-workflow:
-#     name: Web app workflow
-#     max_build_duration: 10
-#     environment:
-#       flutter: stable
-#     scripts:
-#       - name: Get Flutter packages
-#         script: |
-#           flutter packages pub get
-#       - name: Flutter analyze
-#         script: |
-#           flutter analyze
-#       - name: Flutter unit tests
-#         script: |
-#           flutter test
-#       - name: Flutter build webapp
-#         script: |
-#           flutter build web --release
-#           cd build/web
-#           7z a -r ../web.zip ./*
-#     artifacts:
-#       - build/web.zip
-#       - flutter_drive.log
-#     publishing:
-#       email:
-#         recipients:
-#           - user_1@example.com
