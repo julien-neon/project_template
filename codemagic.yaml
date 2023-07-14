@@ -60,9 +60,12 @@ definitions:
         flutter test
     ignore_failure: false
   build_android_no_google: &build_android_no_google
-    name: Build Android (AAB)
+    name: Build Android AAB and APK
     script: |    
         flutter build appbundle --release \
+        --build-name=1.0.$PROJECT_BUILD_NUMBER \
+        --build-number=$PROJECT_BUILD_NUMBER \
+        && flutter build apk --relase \
         --build-name=1.0.$PROJECT_BUILD_NUMBER \
         --build-number=$PROJECT_BUILD_NUMBER
   build_ios_no_app_store_connect: &build_ios_no_app_store_connect
@@ -72,16 +75,16 @@ definitions:
           --build-name=1.0.$PROJECT_BUILD_NUMBER \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
-  # build_android: &build_android
-  #   name: Flutter build AAB and APK #TODO: also build apk!!!
-  #   script: |
-  #       BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
-  #       flutter build appbundle --release \
-  #         --build-name=1.0.$BUILD_NUMBER \
-  #         --build-number=$BUILD_NUMBER
-  #       flutter build apk --release \
-  #         --build-name=1.0.$BUILD_NUMBER \
-  #         --build-number=$BUILD_NUMBER
+  build_android: &build_android
+    name: Flutter build AAB and APK
+    script: |
+        BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
+        flutter build appbundle --release \
+          --build-name=1.0.$BUILD_NUMBER \
+          --build-number=$BUILD_NUMBER
+        flutter build apk --release \
+          --build-name=1.0.$BUILD_NUMBER \
+          --build-number=$BUILD_NUMBER
   # build_ios: &build_ios
   #   name: Flutter build ipa and automatic versioning
   #   script: |
@@ -101,8 +104,9 @@ definitions:
 #   android_vars: &android_vars
 #     PACKAGE_NAME: *bundle_identifier # 
 #     GOOGLE_PLAY_TRACK: "alpha"
-  android_artifacts_just_aab: &android_artifacts_just_aab
+  android_artifacts: &android_artifacts
     - build/**/outputs/**/*.aab
+    - build/**/outputs/**/*.apk
     - build/**/outputs/**/mapping.txt
     # - flutter_drive.log #TODO: needed?
 #   ios_signing: &ios_signing
@@ -225,6 +229,7 @@ workflows:
       - *build_web # TODO: config, when to build what? we do not always want all three
     artifacts:
       - build/**/outputs/**/*.aab
+      - build/**/outputs/**/*.apk
       - build/**/outputs/**/mapping.txt
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
