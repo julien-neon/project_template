@@ -46,6 +46,9 @@ definitions:
         - $HOME/.gradle/caches
         - $FLUTTER_ROOT/.pub-cache
         - $HOME/Library/Caches/CocoaPods
+  appstore_credentials: &appstore_credentials
+    groups: 
+      - app_store_credentials
 
 
   ##### SCRIPTS SETUP ##### (Only change if you know what you are doing)
@@ -94,6 +97,12 @@ definitions:
           --build-name=1.0.$PROJECT_BUILD_NUMBER \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
+  pre_build_ios: &pre_build_ios
+    name: iOS Pre-Build
+    script: | 
+      LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number '($APP_ID)')
+      cd ./ios
+      agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
   build_ios: &build_ios
     name: Build iOS and automatic versioning
     script: |
@@ -162,6 +171,7 @@ workflows:
       <<: *env_versions
       vars:
         <<: *ios_vars
+      <<: *appstore_credentials
     <<: *dependency_caches
     triggering:
       # Trigger the workflow on pushes to the dev branch
@@ -179,6 +189,7 @@ workflows:
       - *flutter_analyze
       - *flutter_test
       - *build_android_no_google
+      - *pre_build_ios
       - *build_ios
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
