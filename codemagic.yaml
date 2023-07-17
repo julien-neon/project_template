@@ -99,7 +99,7 @@ definitions:
   pre_build_ios: &pre_build_ios
     name: iOS Pre-Build
     script: | 
-      LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number '($APP_ID)')
+      LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $APP_ID)
       cd ./ios
       agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
   build_ios: &build_ios
