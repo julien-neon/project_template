@@ -10,14 +10,14 @@ definitions:
   ios_signing_setup: &ios_signing_setup
     ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.example.projectTemplate
+        bundle_identifier: com.example.projectTemplate # <-- TODO: your bundle ID here
+
+        # TODO: if you need specific profiles and certificates, remove the two lines above
+        # and use the following:
         # provisioning_profiles:
         #   - playground # <-- TODO: put your provisioning profile name here
         # certificates:
-        #   - playground # <-- TODO: put your certificate name here
-
-      # lieber so einrichten:
-       
+        #   - playground # <-- TODO: put your certificate name here       
 
   email_notification_setup: &email_notification_setup
     email:
