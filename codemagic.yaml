@@ -94,7 +94,6 @@ definitions:
     name: Build iOS
     script: |
         flutter build ipa --release \
-          --build-name=1.0.$PROJECT_BUILD_NUMBER \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
   pre_build_ios: &pre_build_ios
@@ -107,7 +106,6 @@ definitions:
     name: Build iOS and automatic versioning
     script: |
         flutter build ipa --release \
-          --build-name=1.0.0 \
           --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
           --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
