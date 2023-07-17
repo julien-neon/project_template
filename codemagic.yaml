@@ -17,7 +17,10 @@ definitions:
         # provisioning_profiles:
         #   - playground # <-- TODO: put your provisioning profile name here
         # certificates:
-        #   - playground # <-- TODO: put your certificate name here       
+        #   - playground # <-- TODO: put your certificate name here   
+  android_signing_setup: &android_signing_setup
+    android_signing:
+      - project-keystore # <-- TODO: put reference to your keystore here
 
   email_notification_setup: &email_notification_setup
     email:
@@ -31,6 +34,9 @@ definitions:
   testflight_tester_groups: &testflight_tester_groups
     beta_groups: 
       - testers # <-- TODO: specify groups here
+
+  google_play_track: &google_play_track
+    'alpha'
 
   # TODO: IF YOU DO NOT WANT TO BUILD WEB REMOVE THE SCRIPT FROM ALL THE WORKFLOWS BELOW
   # AND THE ARTIFACT FROM *default_artifacts!
@@ -86,7 +92,7 @@ definitions:
     script: |
         flutter test
     ignore_failure: false
-  build_android_no_google: &build_android_no_google
+  build_android_no_versioning: &build_android_no_versioning
     name: Build Android AAB and APK
     script: |    
         flutter build appbundle --release \
@@ -95,23 +101,31 @@ definitions:
         flutter build apk --release \
         --build-name=1.0.$PROJECT_BUILD_NUMBER \
         --build-number=$PROJECT_BUILD_NUMBER
+  pre_build_versioning: &pre_build_versioning
+    name: Get latest build number from App Store Connect and automatically version iOS
+    script: | 
+      LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $APP_ID)
+      cd ./ios
+      agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+  build_android_versioning: &build_android_versioning
+    name: Build Android AAB and APK
+    script: |    
+
+        flutter build appbundle --release \
+        --build-number=$(($LATEST_BUILD_NUMBER + 1))
+        flutter build apk --release \
+        --build-number=$(($LATEST_BUILD_NUMBER + 1))
   build_ios_no_app_store_connect: &build_ios_no_app_store_connect
     name: Build iOS
     script: |
         flutter build ipa --release \
           --build-number=$PROJECT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
-  pre_build_ios: &pre_build_ios
-    name: iOS Pre-Build
-    script: | 
-      LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $APP_ID)
-      cd ./ios
-      agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
   build_ios: &build_ios
     name: Build iOS and automatic versioning
     script: |
         flutter build ipa --release \
-          --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
+          --build-number=$(($LATEST_BUILD_NUMBER + 1)) \
           --export-options-plist=/Users/builder/export_options.plist
   build_web_release: &build_web_release
     name: Build web
@@ -156,7 +170,7 @@ workflows:
       - *install_pods
       - *flutter_analyze
       - *flutter_test
-      - *build_android_no_google
+      - *build_android_no_versioning
       - *build_ios_no_app_store_connect
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
@@ -171,6 +185,7 @@ workflows:
     <<: *building_instance
     environment:
       <<: *ios_signing_setup
+      <<: *android_signing_setup
       <<: *env_versions
       vars:
         <<: *ios_vars
@@ -191,8 +206,8 @@ workflows:
       - *install_pods
       - *flutter_analyze
       - *flutter_test
-      - *build_android_no_google
-      - *pre_build_ios
+      - *pre_build_versioning
+      - *build_android_versioning
       - *build_ios
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
@@ -203,10 +218,10 @@ workflows:
         submit_to_testflight: true
         <<: *testflight_tester_groups
         submit_to_app_store: false
-
-
-
-
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: *google_play_track
+        submit_as_draft: true
 
   ### STILL WIP ###    
   # main: 
