@@ -39,7 +39,7 @@ definitions:
     'alpha'
 
   # TODO: IF YOU DO NOT WANT TO BUILD WEB REMOVE THE SCRIPT FROM ALL THE WORKFLOWS BELOW
-  # AND THE ARTIFACT FROM *default_artifacts!
+  # AND THE ARTIFACT FROM *default_artifacts! -> das lieber durch eigenen workflow lösen
 
 
 
@@ -151,10 +151,11 @@ definitions:
 workflows:
   pr:
     # tests and builds pull requests
-    name: Pull Request Pipeline
+    name: PR Pipeline (auto)
     <<: *building_instance
     environment:
       <<: *ios_signing_setup
+      <<: *android_signing_setup
       <<: *env_versions
     <<: *dependency_caches
     triggering:
@@ -179,7 +180,7 @@ workflows:
 
   dev:
     # tests, builds and submits to TestFlight
-    name: Dev Pipeline
+    name: Dev Pipeline (auto)
     integrations:
       <<: *app_store_connect_api_key_name
     <<: *building_instance
