@@ -226,9 +226,8 @@ workflows:
       - *install_pods
       - *flutter_analyze
       - *flutter_test
-      - *pre_build_versioning
-      - *build_android_versioning
-      - *build_ios
+      - *build_android_no_versioning
+      - *build_ios_no_app_store_connect
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
     publishing:
