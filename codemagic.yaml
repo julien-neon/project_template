@@ -151,7 +151,7 @@ definitions:
 workflows:
   pr:
     # tests and builds pull requests
-    name: PR Pipeline (auto)
+    name: PR (auto)
     <<: *building_instance
     environment:
       <<: *ios_signing_setup
@@ -179,8 +179,8 @@ workflows:
       <<: *email_notification_setup
 
   dev:
-    # tests, builds and submits to TestFlight
-    name: Dev Pipeline (auto)
+    # analyzes, tests and builds. does not publish!
+    name: Dev (auto)
     integrations:
       <<: *app_store_connect_api_key_name
     <<: *building_instance
@@ -199,6 +199,36 @@ workflows:
       branch_patterns:
         - pattern: 'dev'
       cancel_previous_builds: true
+    scripts:
+      - *add_certs_to_keychain
+      - *flutter_ios_provisioning_setup
+      - *pub_get
+      - *dart_format
+      - *install_pods
+      - *flutter_analyze
+      - *flutter_test
+      - *pre_build_versioning
+      - *build_android_versioning
+      - *build_ios
+      - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+    <<: *default_artifacts
+    publishing:
+      <<: *email_notification_setup
+
+  dev_publish:
+    # analyzes, tests, builds and submits to TestFlight + Google Play
+    name: Dev Publish
+    integrations:
+      <<: *app_store_connect_api_key_name
+    <<: *building_instance
+    environment:
+      <<: *ios_signing_setup
+      <<: *android_signing_setup
+      <<: *env_versions
+      vars:
+        <<: *ios_vars
+      <<: *appstore_credentials
+    <<: *dependency_caches
     scripts:
       - *add_certs_to_keychain
       - *flutter_ios_provisioning_setup
