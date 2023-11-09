@@ -29,6 +29,13 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: 📦 Setup OnePub
+        env: 
+            ONEPUB_TOKEN: ${{ secrets.ONEPUB_TOKEN }}
+        run: |
+              dart pub global activate onepub
+              onepub import
+
       - name: 🧪 Run Analyze
         run: flutter analyze . --fatal-infos
 
