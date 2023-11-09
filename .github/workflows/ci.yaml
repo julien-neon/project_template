@@ -28,15 +28,15 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      
-      - name: Ⓜ️ Set up Melos
-        uses: bluefireteam/melos-action@v2
 
       - name: 🧪 Run Analyze
-        run: melos run analyze
+        run: flutter analyze . --fatal-infos
 
       - name: 📝 Run Test with Coverage
-        run: melos run coverage
+        run: |
+          dart pub global activate full_coverage
+          dart pub global run full_coverage
+          flutter test --coverage
       
       - name: 📊 Code Coverage
         uses: whynotmake-it/dart-coverage-assistant@d221ca8dc01c04908b2eae56e2ac591cea99741c
