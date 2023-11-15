@@ -1,16 +1,51 @@
+# TODO: Google Play or Firebase App Distribution?
+
 definitions:
   ###### TODO: PROJECT SPECIFIC SETUP ######
 
-  ios_vars: &ios_vars
-    APP_ID: 6451317368 # <--TODO: Put your APP ID here
+  ## iOS Setup ##
+
+  ios_app_id: &ios_app_id
+    6451317368 # <--TODO: Put your APP ID here
+
+  ios_app_bundle_identifier: &ios_app_bundle_identifier
+    com.example.projectTemplate # <-- TODO: your bundle ID here
 
   app_store_connect_api_key_name: &app_store_connect_api_key_name
-    app_store_connect: Codemagic Playground # <-- TODO: put your app store connect API key name here
+    Codemagic Playground # <-- TODO: put your app store connect API key name here
+
+  testflight_tester_groups: &testflight_tester_groups
+    beta_groups: 
+      - testers # <-- TODO: specify Testflight tester groups here
+
+  ## Android Setup ##
+
+  android_signing_keystore_reference: &android_signing_keystore_reference
+    project-keystore # <-- TODO: put reference to your keystore here
+
+  google_play_track_dev: &google_play_track_dev
+    'alpha' # <-- TODO: define your wanted google play track for the dev (auto) workflow here
+
+  ## Notification via eMail Setup ##
+
+  email_notification_setup: &email_notification_setup
+    email:
+      recipients:
+        - developer@neon.dev # <-- TODO: add all the recipients here
+      notify:
+        success: true # Receive a notification when a build succeeds
+        failure: false # Do not receive a notification when a build fails
+
+  ######################################################################################################################################
+  ######################################################################################################################################
+  ############################################## DO NOT TOUCH ANYTHING BELOW THIS ######################################################
+  ######################################################################################################################################
+  ######################################################################################################################################
 
   ios_signing_setup: &ios_signing_setup
     ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.example.projectTemplate # <-- TODO: your bundle ID here
+        bundle_identifier: *ios_app_bundle_identifier
 
         # TODO: if you need specific profiles and certificates, remove the two lines above
         # and use the following:
@@ -20,26 +55,10 @@ definitions:
         #   - playground # <-- TODO: put your certificate name here   
   android_signing_setup: &android_signing_setup
     android_signing:
-      - project-keystore # <-- TODO: put reference to your keystore here
-
-  email_notification_setup: &email_notification_setup
-    email:
-      recipients:
-        - developer@neon.dev # <-- TODO: add all the recipients here
-      notify:
-        success: true # To receive a notification when a build succeeds
-        failure: false # To not receive a notification when a build fails
-
-
-  testflight_tester_groups: &testflight_tester_groups
-    beta_groups: 
-      - testers # <-- TODO: specify groups here
-
-  google_play_track: &google_play_track
-    'alpha'
+      - *android_signing_keystore_reference
 
   # TODO: IF YOU DO NOT WANT TO BUILD WEB REMOVE THE SCRIPT FROM ALL THE WORKFLOWS BELOW
-  # AND THE ARTIFACT FROM *default_artifacts!
+  # AND THE ARTIFACT FROM *default_artifacts! -> das lieber durch eigenen workflow lösen
 
 
 
@@ -151,10 +170,11 @@ definitions:
 workflows:
   pr:
     # tests and builds pull requests
-    name: Pull Request Pipeline
+    name: PR (auto)
     <<: *building_instance
     environment:
       <<: *ios_signing_setup
+      <<: *android_signing_setup
       <<: *env_versions
     <<: *dependency_caches
     triggering:
@@ -178,17 +198,17 @@ workflows:
       <<: *email_notification_setup
 
   dev:
-    # tests, builds and submits to TestFlight
-    name: Dev Pipeline
+    # analyzes, tests and builds. does not publish!
+    name: Dev (auto)
     integrations:
-      <<: *app_store_connect_api_key_name
+      app_store_connect: *app_store_connect_api_key_name
     <<: *building_instance
     environment:
       <<: *ios_signing_setup
       <<: *android_signing_setup
       <<: *env_versions
       vars:
-        <<: *ios_vars
+        APP_ID: *ios_app_id
       <<: *appstore_credentials
     <<: *dependency_caches
     triggering:
@@ -206,22 +226,51 @@ workflows:
       - *install_pods
       - *flutter_analyze
       - *flutter_test
-      - *pre_build_versioning
-      - *build_android_versioning
-      - *build_ios
+      - *build_android_no_versioning
+      - *build_ios_no_app_store_connect
       - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
     <<: *default_artifacts
     publishing:
       <<: *email_notification_setup
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        <<: *testflight_tester_groups
-        submit_to_app_store: false
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: *google_play_track
-        submit_as_draft: true
+
+  # dev_publish:
+  #   # analyzes, tests, builds and submits to TestFlight + Google Play
+  #   name: Dev Publish
+  #   integrations:
+  #     app_store_connect: *app_store_connect_api_key_name
+  #   <<: *building_instance
+  #   environment:
+  #     <<: *ios_signing_setup
+  #     <<: *android_signing_setup
+  #     <<: *env_versions
+  #     vars:
+  #       APP_ID: *ios_app_id
+  #     <<: *appstore_credentials
+  #   <<: *dependency_caches
+  #   scripts:
+  #     - *add_certs_to_keychain
+  #     - *flutter_ios_provisioning_setup
+  #     - *pub_get
+  #     - *dart_format
+  #     - *install_pods
+  #     - *flutter_analyze
+  #     - *flutter_test
+  #     - *pre_build_versioning
+  #     - *build_android_versioning
+  #     - *build_ios
+  #     - *build_web_release # TODO: REMOVE THIS, IF YOU DO NOT WANT TO BUILD WEB
+  #   <<: *default_artifacts
+  #   publishing:
+  #     <<: *email_notification_setup
+  #     app_store_connect:
+  #       auth: integration
+  #       submit_to_testflight: true
+  #       <<: *testflight_tester_groups
+  #       submit_to_app_store: false
+  #     google_play:
+  #       credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS # TODO: set this up in env vars
+  #       track: *google_play_track_dev
+  #       submit_as_draft: true
 
   ### STILL WIP ###    
   # main: 

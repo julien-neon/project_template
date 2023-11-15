@@ -1,0 +1,55 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  sematic-pr:
+    name: Semantic Pull Request
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
+
+  flutter-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📚 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Setup OnePub
+        env: 
+            ONEPUB_TOKEN: ${{ secrets.ONEPUB_TOKEN }}
+        run: |
+              dart pub global activate onepub
+              onepub import
+
+      - name: 🧪 Run Analyze
+        run: flutter analyze . --fatal-infos
+
+      - name: 📝 Run Test with Coverage
+        run: |
+          dart pub global activate full_coverage
+          dart pub global run full_coverage
+          flutter test --coverage
+      
+      - name: 📊 Code Coverage
+        uses: whynotmake-it/dart-coverage-assistant@5df622b0cf8ad8eca6baba5af82d49e140f785df
+        with:
+            lower_threshold: 1
+            upper_threshold: 50
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            enforce_threshold: single
+            enforce_forbidden_decrease: single
