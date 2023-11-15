@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
       - dev
   pull_request:
@@ -53,6 +53,3 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             enforce_threshold: single
             enforce_forbidden_decrease: single
-
-      
-   
