@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 📚 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: 🐦 Setup Flutter
         uses: subosito/flutter-action@v2
@@ -46,7 +46,7 @@ jobs:
           flutter test --coverage
       
       - name: 📊 Code Coverage
-        uses: whynotmake-it/dart-coverage-assistant@d221ca8dc01c04908b2eae56e2ac591cea99741c
+        uses: whynotmake-it/dart-coverage-assistant@5df622b0cf8ad8eca6baba5af82d49e140f785df
         with:
             lower_threshold: 1
             upper_threshold: 50
