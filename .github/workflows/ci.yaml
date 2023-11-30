@@ -2,13 +2,14 @@ name: Continuous Integration
 
 on:
   push:
-    branches-ignore:
-      - main
-      - dev
-  pull_request:
     branches:
       - main
       - dev
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   sematic-pr:
@@ -29,12 +30,20 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Setup OnePub
-        env: 
-            ONEPUB_TOKEN: ${{ secrets.ONEPUB_TOKEN }}
-        run: |
-              dart pub global activate onepub
-              onepub import
+      # TODO: uncomment this as soon as you integrate dependencies
+      # that point to our OnePub. For this step to work, you'll have
+      # to add a GitHub secret to the repository settings called
+      # ONEPUB_TOKEN. The value of this Token can be found in our 
+      # password manager under the name OnePub Codemagic Key
+      # - name: 📦 Setup OnePub
+      #   env: 
+      #       ONEPUB_TOKEN: ${{ secrets.ONEPUB_TOKEN }}
+      #   run: |
+      #         dart pub global activate onepub
+      #         onepub import
+
+      - name: ⬇️ Install dependencies
+        run: flutter pub get
 
       - name: 🧪 Run Analyze
         run: flutter analyze . --fatal-infos
